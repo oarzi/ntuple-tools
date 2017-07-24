@@ -20,7 +20,7 @@ class Plane:
         if self.min_rad < rad < self.max_rad:
             return True
         else:
-            return any([e.is_contains(p_x, p_y) for e in self.edges])
+            return any([e.is_contain(p_x, p_y) for e in self.edges])
 
 
 class Cell:
