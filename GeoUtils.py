@@ -48,7 +48,7 @@ def pairwise(iterable):
 
 
 def read_plane(geometry_file, plane_details, start, end):
-    plane_details = [int(i) for i in plane_details.split()]
+    plane_details = [float(i) for i in plane_details.split()]
     plane_id, max_rad, min_rad = plane_details[0], plane_details[2], plane_details[3]
 
     cells, edges = []
@@ -79,10 +79,11 @@ def read_plane(geometry_file, plane_details, start, end):
 
 
 def read_planes(geometry_file):
-    planes_indices = get_plane_indices(geometry_file)
-
-    planes = [read_plane(geometry_file, planes_indices[start], start, end) for start, end in
-              pairwise(planes_indices.keys())]
+    with open(geometry_file, 'rb') as geometry_file:
+        planes_indices = get_plane_indices(geometry_file)
+    
+        planes = [read_plane(geometry_file, planes_indices[start], start, end) for start, end in
+                  pairwise(planes_indices.keys())]
 
     return planes
 
@@ -102,9 +103,8 @@ def remove_spaces():
 
 
 def main():
-    geometry_file_path = "fullgeometry.txt"
-    with open(geometry_file_path, 'rb') as geometry_file:
-        planes = read_planes(geometry_file)
+    geometry_file_path = "_fullgeometry.txt"
+    planes = read_planes(geometry_file_path)
 
 
 if __name__ == '__main__':
