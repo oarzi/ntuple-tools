@@ -44,14 +44,14 @@ def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = itertools.tee(iterable)
     next(b, None)
-    return itertools.izip(a, b)
+    return list(itertools.izip(a, b))
 
 
 def read_plane(geometry_file, plane_details, start, end):
     plane_details = [float(i) for i in plane_details.split()]
     plane_id, max_rad, min_rad = plane_details[0], plane_details[2], plane_details[3]
 
-    cells, edges = []
+    cells, edges = [], []
     df = read_csv(geometry_file, sep=' ', skiprows=lambda x: x not in range(start + 1, end), nrows=end - start,
                   names=['flag', 'num', 'x1', 'y1', 'x2', 'y2', 'x3', 'y3', 'x4', 'y4', 'x5', 'y5', 'x6', 'y6', 'x7',
                          'y7', ], header=None, index_col=False)
@@ -70,7 +70,7 @@ def read_plane(geometry_file, plane_details, start, end):
 
         curr_cel = Cell(polyPath, full, large, edge)
         cells.append(curr_cel)
-        if edges:
+        if edge:
             edges.append(curr_cel)
 
     plane = Plane(plane_id, max_rad, min_rad, cells, edges)
@@ -81,14 +81,19 @@ def read_plane(geometry_file, plane_details, start, end):
 def read_planes(geometry_file):
     with open(geometry_file, 'rb') as geometry_file:
         planes_indices = get_plane_indices(geometry_file)
-    
-        planes = [read_plane(geometry_file, planes_indices[start], start, end) for start, end in
-                  pairwise(planes_indices.keys())]
+
+        keys = sorted(planes_indices.keys())
+
+        pairs = pairwise(keys)
+        planes = [read_plane("fullgeometry_.txt", planes_indices[start], start, end) for
+                  start, end in pairs]
 
     return planes
 
+
 def point_inside_poly(planes, p_x, p_y):
     return any([plane.is_contain(p_x, p_y) for plane in planes])
+
 
 def remove_spaces():
     readfile = open('fullgeometry.txt')
@@ -103,7 +108,7 @@ def remove_spaces():
 
 
 def main():
-    geometry_file_path = "_fullgeometry.txt"
+    geometry_file_path = "fullgeometry_.txt"
     planes = read_planes(geometry_file_path)
 
 
