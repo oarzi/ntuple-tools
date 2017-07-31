@@ -1,26 +1,52 @@
-import csv
-import re
+from __future__ import division
 import matplotlib.path as mplPath
+import re
 import itertools
 from pandas import read_csv
 import numpy as np
+from ROOT import TCanvas, TH2I, TGraph, TMultiGraph
+from array import array
 
 
 class Plane:
-    def __init__(self, id, max_rad, min_rad, cells, edges):
-        self.id = id
+    def __init__(self, name, max_rad, min_rad, cells, edges):
+        self.name = name
         self.min_rad = min_rad
         self.max_rad = max_rad
         self.cells = cells
         self.edges = edges
 
-    def is_contain(self, p_x, p_y):
+    def is_contain(self, rechit):
+        p_x, p_y = 10 * rechit.x(), 10 * rechit.y()
         rad = (p_x ** 2 + p_y ** 2) ** 0.5
 
         if self.min_rad < rad < self.max_rad:
             return True
         else:
             return any([e.is_contain(p_x, p_y) for e in self.edges])
+
+    def print_to_pic(self):
+
+        c = TCanvas()
+
+        mg = TMultiGraph()
+
+        for cell in self.cells:
+            x = array("d", cell.coordinates.vertices[:, 0] / 10)
+            x.append(x[0])
+
+            y = array("d", cell.coordinates.vertices[:, 1] / 10)
+            y.append(y[0])
+
+            gi = TGraph(len(x), x, y)
+            gi.SetMarkerStyle(1)
+
+            mg.Add(gi, "AL")
+
+        # mg.Draw("AL")
+        mg.Draw("A")
+
+        return mg
 
 
 class Cell:
@@ -49,7 +75,7 @@ def pairwise(iterable):
 
 def read_plane(geometry_file, plane_details, start, end):
     plane_details = [float(i) for i in plane_details.split()]
-    plane_id, max_rad, min_rad = plane_details[0], plane_details[2], plane_details[3]
+    plane_id, max_rad, min_rad = int(plane_details[0]), plane_details[2], plane_details[3]
 
     cells, edges = [], []
     df = read_csv(geometry_file, sep=' ', skiprows=lambda x: x not in range(start + 1, end), nrows=end - start,
